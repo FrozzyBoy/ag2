@@ -1,0 +1,25 @@
+{
+  "name": "trainings-angular2",
+  "version": "1.0.0",
+  "description": "test weather application",
+  "main": "src/app.ts",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/FrozzyBoy/ag2.git"
+  },
+  "author": "Artsiom Marozau",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/FrozzyBoy/ag2/issues"
+  },
+  "homepage": "https://github.com/FrozzyBoy/ag2#readme",
+  "dependencies": {},
+  "devDependencies": {
+    "html-webpack-plugin": "^2.24.1",
+    "typescript": "^2.0.10",
+    "webpack": "^1.13.3"
+  }
+}
