@@ -1,16 +1,16 @@
-export interface Coord {
+interface Coord {
   lon: number;
   lat: number;
 }
 
-export interface Weather {
+interface Weather {
   id: number;
   main: string;
   description: string;
   icon: string;
 }
 
-export interface Main {
+interface Main {
   temp: number;
   pressure: number;
   humidity: number;
@@ -18,16 +18,16 @@ export interface Main {
   temp_max: number;
 }
 
-export interface Wind {
+interface Wind {
   speed: number;
   deg: number;
 }
 
-export interface Clouds {
+interface Clouds {
   all: number;
 }
 
-export interface Sys {
+interface Sys {
   type: number;
   id: number;
   message: number;
@@ -36,7 +36,7 @@ export interface Sys {
   sunset: number;
 }
 
-export interface Town {
+interface Town {
   coord: Coord;
   weather: Weather[];
   base: string;
@@ -51,7 +51,7 @@ export interface Town {
   cod: number;
 }
 
-export interface City {
+interface City {
   id: number;
   name: string;
   coord: Coord;
@@ -60,7 +60,7 @@ export interface City {
   sys: Sys;
 }
 
-export interface CityWeather {
+interface CityWeather {
   city: City;
   cod: string;
   message: number;
@@ -68,7 +68,7 @@ export interface CityWeather {
   list: WeatherData[];
 }
 
-export interface WeatherData {
+interface WeatherData {
   dt: number;
   main: Main;
   weather: Weather[];
@@ -80,7 +80,7 @@ export interface WeatherData {
   dt_txt: string;
 }
 
-export class Rain {
+class Rain {
   public get h3(): number {
     return this['3h'];
   }
@@ -89,7 +89,7 @@ export class Rain {
   }
 }
 
-export class Snow {
+class Snow {
   public get h3(): number {
     return this['3h'];
   }
@@ -98,11 +98,16 @@ export class Snow {
   }
 }
 
-export interface Wind {
+interface Wind {
   speed: number;
   deg: number;
 }
 
-export interface Sys2 {
+interface Sys2 {
   pod: string;
+}
+
+interface weatherResponce<T>{
+  count: number;
+  list: T[];
 }
