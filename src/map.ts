@@ -1,102 +1,86 @@
-import { IWeatherRepository, WeatherRepository } from './repository/weather-repository';
+import {
+  IWeatherRepository,
+  WeatherRepository
+} from './repository/weather-repository';
 
 export class map {
+  private static googleMap: any;
+
+  private static CountTowns: number = 50;
 
   private static _instance: map;
-  public static getInstance(): map {
+  private static getInstance(): map {
     if (!map._instance) {
       map._instance = new map();
       map._instance.weatherRepository = new WeatherRepository();
+      map._instance.status = document.getElementById('status');
     }
     return map._instance;
   }
 
-  private static CountTowns: number = 50;
-
-  private static status: HTMLElement;
-
   public static initMap() {
-    map.status = document.getElementById('status');
-    map.status.innerText = "Start loading...";
-    let googleMap = new google.maps.Map(document.getElementById('map'), {
-      center: { lat: -34.397, lng: 150.644 },
-      zoom: 13
-    });
-    let infoWindow: InfoWindow = new google.maps.InfoWindow({ map: googleMap });
-    let instance = map.getInstance();
-    instance.infoWindow = infoWindow;
-    instance.map = googleMap;
+    map.getInstance().initialize();
+  }
 
-    // Try HTML5 geolocation.
+  public initialize(): void {
     if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        (pos) => instance.drawContent(pos)
-        , () => instance.handleLocationError(true, infoWindow, googleMap.getCenter())
-      );
-    } else {
-      // Browser doesn't support Geolocation
-      instance.handleLocationError(false, infoWindow, googleMap.getCenter());
+      navigator.geolocation.getCurrentPosition((pos: Position) => {
+        this.drawMap(pos);
+      })
     }
   }
 
-  public infoWindow: InfoWindow;
-  public map: any;
   private weatherRepository: IWeatherRepository;
+  private status: HTMLElement;
 
-  private drawContent = (position: any) => {
-    let lat: number = parseFloat(parseFloat(position.coords.latitude).toFixed(2));
-    let lng: number = parseFloat(parseFloat(position.coords.longitude).toFixed(2));
-
-    let pos: coordGoogle = {
-      lat: lat,
-      lng: lng
-    };
-
-    let coord: Coord = <Coord>{ lat: pos.lat, lon: pos.lng };
-    this.weatherRepository.getCurrentloaction(coord, this.currentlocationCallback.bind(this, pos));
+  private drawMap(pos: Position): void {
+    this.status.textContent = "Draw map";
+    let currentPos: coordGoogle = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+    map.googleMap = new google.maps.Map(document.getElementById('map'), {
+      center: currentPos,
+      zoom: 12
+    });
+    this.drawWeather(map.googleMap, currentPos);
   }
 
-  private currentlocationCallback(pos: coordGoogle, data: weatherResponce<Town>): void {
-    map.status.innerText = "Loaded current position. Start to load other...";
-    let first: Town = data.list[0];
-    let content: string = `Location ${first.name}: ${first.main.temp}`;
-    this.infoWindow.setPosition(pos);
-    this.infoWindow.setContent(content);
-
-    this.map.setCenter(pos);
-
-    let coord: Coord = <Coord>{ lat: pos.lat, lon: pos.lng };
-
-    this.weatherRepository.getNearestLocations(coord, map.CountTowns, this.nearestLocationsCallback.bind(this, pos));
+  private drawWeather(googleMap: any, currentLocation: coordGoogle): void {
+    this.status.textContent = "Load weather";
+    let coord: Coord = <Coord>{ lat: currentLocation.lat, lon: currentLocation.lng };
+    this.weatherRepository.getCurrentloaction(coord, this.drawCurrentLoacation.bind(this, googleMap));
+    this.weatherRepository.getNearestLocations(coord, map.CountTowns, this.drawAllTownsWeather.bind(this, googleMap));
   }
 
-  private nearestLocationsCallback(pos: coordGoogle, data: weatherResponce<Town>): void {
-    map.status.innerText = "Initialize other towns...";
+  private drawCurrentLoacation(googleMap: any, data: weatherResponce<Town>): void {
+    let current = data.list[0];
+    let label = `Current location:${current.name}`;
+    this.drawWindows(label, current.coord, googleMap);
+  }
+
+  private drawAllTownsWeather(googleMap: any, data: weatherResponce<Town>): void {
+    this.status.textContent = "Draw weather";
+    let towns: Town[] = data.list;
+    let content: string = '';
+    let current: Town = null;
     let gradus = '°';
-    let element: Town = null;
+
     for (let i = data.count - 1; i > 0; i--) {
-      element = data.list[i];
-      let infoWindow: InfoWindow = new google.maps.InfoWindow({ map: this.map });
-      infoWindow.setPosition({ lat: element.coord.lat, lng: element.coord.lon });
-      infoWindow.setContent(`${element.name}: ${element.main.temp}${gradus}`);
+      current = towns[i];
+      content = `${current.name}: ${current.main.temp}${gradus}C`;
+      this.drawWindows(content, current.coord, googleMap);
     }
-    this.turnOffLoader();
+
+    this.status.textContent = "Complite";
   }
 
-  private turnOffLoader(): void {
-    map.status.remove();
-    let spinners = document.getElementsByClassName('spinner');
-    for (let i = 0; i < spinners.length; i++) {
-      spinners[i].remove();
-    }
-    document.getElementById('map').className = "loaded";
+  private drawWindows(content: string, pos: Coord, googleMap: any): void {
+    let win: InfoWindow = new google.maps.InfoWindow({ map: googleMap });
+    win.setContent(content);
+    win.setPosition(this.convertCoord(pos));
   }
 
-  private handleLocationError(browserHasGeolocation: boolean, infoWindow: InfoWindow, pos: coordGoogle) {
-    infoWindow.setPosition(pos);
-    infoWindow.setContent(browserHasGeolocation ?
-      'Error: The Geolocation service failed.' :
-      'Error: Your browser doesn\'t support geolocation.');
+  private convertCoord(pos: Coord): coordGoogle {
+    return { lat: pos.lat, lng: pos.lon };
   }
+
 }
 
